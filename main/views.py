@@ -4,7 +4,7 @@ from django.http import HttpResponse
 import requests
 from .models import Person,Movie
 import neomodel 
-from neomodel import match
+from neomodel import match,Traversal
 
 def home(request):
     #jim = Person(name='Juleaa', born=2020).save() # Create
@@ -25,4 +25,10 @@ def home(request):
     context=[jim]
     #print(context)
     #print('mehlab', context['history'][i.id])
-    return HttpResponse( fog.acted.relationship(jim))
+    #fog.acted.is_connected(jim)
+    definition = dict(node_class=Movie, direction=match.OUTGOING,
+    relation_type=None, model=None)
+    relations_traversal = Traversal(fog, Movie.__label__,
+    definition)
+    all_jims_relations = relations_traversal.all()
+    return HttpResponse( all_jims_relations)
