@@ -23,6 +23,17 @@ class MovieType(ObjectType):
     uid=UUID()
     released=Int()
 
+class ConnectionType(ObjectType):
+    name = String()
+    title = String()
+    def __init__(self, name=None,title=None):   
+        self.name = name
+        self.title = title
+    def __init__(self, temp):   
+        print('Hello World')
+        print(temp,'Hello')
+        self.name = temp['name']
+        self.title = temp['title'] 
 class PersonType(ObjectType):
     id=ID()
     uid=UUID()
@@ -83,31 +94,44 @@ class MovieDType(ObjectType):
         output = [] # output to return
         
         fog = Movie.nodes.get(title=parent.title)
+        d={}
         list_result=fog.acted.all()
+
         for each_point in list_result:
-            output.append(
-               PersonType( name=each_point.name, born=each_point.born,)
-            )
+            if(d.get(each_point.name)==None):
+                output.append(
+                PersonType( name=each_point.name, born=each_point.born,)
+                )
+                d[each_point.name]=True
         list_result=fog.wrote.all()
         for each_point in list_result:
-            output.append(
-               PersonType( name=each_point.name, born=each_point.born)
-            )
+            if(d.get(each_point.name)==None):
+                output.append(
+                PersonType( name=each_point.name, born=each_point.born)
+                )
+                d[each_point.name]=True
         list_result=fog.produced.all()
         for each_point in list_result:
-            output.append(
-               PersonType( name=each_point.name, born=each_point.born)
-            )
+            if(d.get(each_point.name)==None):
+                output.append(
+                PersonType( name=each_point.name, born=each_point.born)
+                )
+                d[each_point.name]=True
         list_result=fog.directed.all()
         for each_point in list_result:
-            output.append(
-               PersonType( name=each_point.name, born=each_point.born)
-            )
+            if(d.get(each_point.name)==None):
+                output.append(
+                PersonType( name=each_point.name, born=each_point.born)
+                )
+                d[each_point.name]=True
         list_result=fog.reviewed.all()
+        
         for each_point in list_result:
-            output.append(
-               PersonType( name=each_point.name, born=each_point.born)
-            )
+            if(d.get(each_point.name)==None):
+                output.append(
+                PersonType( name=each_point.name, born=each_point.born)
+                )
+                d[each_point.name]=True
         return output
         
     def resolve_role(parent, info):
@@ -200,6 +224,7 @@ class Query(graphene.ObjectType):
 
 
 class PersonInput(graphene.InputObjectType):
+    uid=graphene.String()
     name = graphene.String()
     born = graphene.Int()
 
@@ -218,6 +243,43 @@ class CreatePerson(graphene.Mutation):
         jim = Person.nodes.get(name=input.name)
         
         return CreatePerson(person=jim)
+
+class ConnectionInput(graphene.InputObjectType):
+    uid=graphene.String()
+    name = graphene.String()
+    title = graphene.String()
+    ctype= graphene.String()
+
+
+class CreateConnection(graphene.Mutation):
+    class Arguments:
+        input = ConnectionInput(required=True)
+
+    # Class attributes define the response of the mutation
+    connection = graphene.Field(ConnectionType)
+
+    @classmethod
+    def mutate(cls, root, info, input):
+        print('Hello')
+        print(input)
+        jim = Person.nodes.get(name=input.name)
+        fog=Movie.nodes.get(title=input.title)         
+        if(input.ctype=='acted'):
+            print('acted')
+            print(jim.acted.connect(fog))
+        elif(input.ctype=='produced'):
+            print(jim.produced.connect(fog))
+            print('produced')
+        elif(input.ctype=='wrote'):
+            print('acted')
+            jim.wrote.connect(fog)
+        elif(input.ctype=='directed'):
+            print('acted')
+            jim.directed.connect(fog)
+        else:
+            pass
+        output={'name':jim.name,'title':fog.title}
+        return CreateConnection(connection=ConnectionType(output))
 
 class MovieInput(graphene.InputObjectType):
     uid=graphene.String()
@@ -241,33 +303,6 @@ class CreateMovie(graphene.Mutation):
         
         return CreateMovie(movie=jim1)
 
-# class BookInput(graphene.InputObjectType):
-#     title = graphene.String()
-#     author = graphene.String()
-#     pages = graphene.Int()
-#     price = graphene.Int()
-#     quantity = graphene.Int()
-#     description = graphene.String()
-#     status = graphene.String()
-
-# class CreateBook(graphene.Mutation):
-#     class Arguments:
-#         input = BookInput(required=True)
-
-#     book = graphene.Field(BookType)
-    
-#     @classmethod
-#     def mutate(cls, root, info, input):
-#         book = Book()
-#         book.title = input.title
-#         book.author = input.author
-#         book.pages = input.pages
-#         book.price = input.price
-#         book.quantity = input.quantity
-#         book.description = input.description
-#         book.status = input.status
-#         book.save()
-#         return CreateBook(book=book)
 
 class UpdatePerson(graphene.Mutation):
     class Arguments:
@@ -302,6 +337,7 @@ class Mutation(graphene.ObjectType):
     #update_category = UpdateCategory.Field()
     create_person = CreatePerson.Field()
     create_movie = CreateMovie.Field()
+    create_connection = CreateConnection.Field()
     update_person = UpdatePerson.Field()
     update_movie = UpdateMovie.Field()
 
