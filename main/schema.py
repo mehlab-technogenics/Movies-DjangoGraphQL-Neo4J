@@ -250,6 +250,8 @@ class ConnectionInput(graphene.InputObjectType):
     title = graphene.String()
     ctype= graphene.String()
 
+    
+
 
 class CreateConnection(graphene.Mutation):
     class Arguments:
