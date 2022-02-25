@@ -1,6 +1,7 @@
 import graphene
 from graphene_django import DjangoObjectType
-
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from .models import Movie, Person
 import neomodel
 
@@ -145,6 +146,7 @@ class Query(graphene.ObjectType):
     find_movie=graphene.Field(MovieType, id=graphene.String(required=True))
     find_movieD=graphene.Field(MovieDType, id=graphene.String(required=True))
     find_like_movieD=graphene.Field(graphene.List(MovieDType), id=graphene.String(required=True))
+    
     find_person=graphene.Field(PersonType, id=graphene.String(required=True))
     #category_by_name = graphene.Field(PersonType, name=graphene.String())
 
@@ -170,10 +172,15 @@ class Query(graphene.ObjectType):
     def resolve_persons(root, info, **kwargs):
         # Querying a list
         return Person.nodes.all()
+
+
+    @permission_classes([IsAuthenticated])
     def resolve_find_person(root, info, id):
         # Querying a list
         jim = Person.nodes.get(name=id)
         return jim
+
+        
     def resolve_find_movie(root, info, id):
         # Querying a list
         jim = Movie.nodes.get(title=id)
@@ -188,6 +195,8 @@ class Query(graphene.ObjectType):
                     released=list_result.released
                 )
         return output
+
+    @permission_classes([IsAuthenticated])
     def resolve_find_like_movieD(root, info, id):
         # Querying a list
         list_result=Movie.nodes.filter(title__icontains=id)

@@ -31,4 +31,4 @@ def home(request):
     relations_traversal = Traversal(fog, Movie.__label__,
     definition)
     all_jims_relations = relations_traversal.all()
-    return HttpResponse( all_jims_relations)
+    return HttpResponse( fog.acted.is_connected(jim))
