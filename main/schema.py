@@ -232,26 +232,7 @@ class Query(graphene.ObjectType):
                 )
             )
         return output
-###############################------Mutation-----############################################
 
-
-
-# class UpdateCategory(graphene.Mutation):
-#     class Arguments:
-#         # Mutation to update a category 
-#         title = graphene.String(required=True)
-#         id = graphene.ID()
-
-
-#     category = graphene.Field(CategoryType)
-
-#     @classmethod
-#     def mutate(cls, root, info, title, id):
-#         category = Category.objects.get(pk=id)
-#         category.title = title
-#         category.save()
-        
-#         return UpdateCategory(category=category)
 
 
 class PersonInput(graphene.InputObjectType):
