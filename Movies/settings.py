@@ -31,7 +31,7 @@ SECRET_KEY = 'django-insecure-(n3(-6h%reuwg$wr0o2xsegze6-3e0_k7@+z9=8atb!-znmic4
 DEBUG = True
 from datetime import timedelta
 from pathlib import Path
-ALLOWED_HOSTS = ['http://localhost:3000','127.0.0.1',"http://localhost:3000",'localhost']
+ALLOWED_HOSTS = ['http://localhost:3000','127.0.0.1',"http://localhost:3000",'localhost',"https://studio.apollographql.com/sandbox/explorer"]
 
 # Application definition
 
@@ -49,10 +49,18 @@ INSTALLED_APPS = [
     'graphene_django',
     'rest_framework',
    'rest_framework_simplejwt',
+   'graphql_jwt.refresh_token.apps.RefreshTokenConfig',
 ]
 GRAPHENE = {
-    'SCHEMA': 'main.schema.schema' # Where your Graphene schema lives
+    'SCHEMA': 'main.schema.schema', # Where your Graphene schema lives
+    "MIDDLEWARE": [
+        "graphql_jwt.middleware.JSONWebTokenMiddleware",
+    ],
 }
+AUTHENTICATION_BACKENDS = [
+    "graphql_jwt.backends.JSONWebTokenBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (

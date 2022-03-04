@@ -4,13 +4,21 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from .models import Movie, Person
 import neomodel
-
+import graphql_jwt
 from graphene_django import DjangoObjectType
 import graphene
-
+from graphql_jwt.decorators import login_required
 
 from graphene import ObjectType, String,Int,ID,UUID,Field
+from django.contrib.auth import get_user_model
 
+
+from graphene_django import DjangoObjectType
+
+
+class UserType(DjangoObjectType):
+    class Meta:
+        model = get_user_model()
 
 # class MovieType(DjangoObjectType):
 #     class Meta: 
@@ -148,7 +156,13 @@ class Query(graphene.ObjectType):
     find_like_movieD=graphene.Field(graphene.List(MovieDType), id=graphene.String(required=True))
     
     find_person=graphene.Field(PersonType, id=graphene.String(required=True))
+
     #category_by_name = graphene.Field(PersonType, name=graphene.String())
+    viewer = graphene.Field(UserType, token=graphene.String(required=True))
+
+    @login_required
+    def resolve_viewer(self, info, **kwargs):
+        return info.context.user
 
     def resolve_movies(root, info, **kwargs):
         # Querying a list
@@ -174,7 +188,7 @@ class Query(graphene.ObjectType):
         return Person.nodes.all()
 
 
-    @permission_classes([IsAuthenticated])
+    @login_required
     def resolve_find_person(root, info, id):
         # Querying a list
         jim = Person.nodes.get(name=id)
@@ -196,9 +210,17 @@ class Query(graphene.ObjectType):
                 )
         return output
 
-    @permission_classes([IsAuthenticated])
+    #@login_required
     def resolve_find_like_movieD(root, info, id):
         # Querying a list
+        print('root')
+        print(info.context.headers)
+        user = info.context.user
+        print(user)
+        if not user.is_authenticated:
+            raise Exception("Authentication credentials were not provided")
+        print('Root')
+        print(info)
         list_result=Movie.nodes.filter(title__icontains=id)
         output = []
         for each_point in list_result:
@@ -351,5 +373,9 @@ class Mutation(graphene.ObjectType):
     create_connection = CreateConnection.Field()
     update_person = UpdatePerson.Field()
     update_movie = UpdateMovie.Field()
+    token_auth = graphql_jwt.ObtainJSONWebToken.Field()
+    verify_token = graphql_jwt.Verify.Field()
+    refresh_token = graphql_jwt.Refresh.Field()
+
 
 schema = graphene.Schema(query=Query, mutation=Mutation)
