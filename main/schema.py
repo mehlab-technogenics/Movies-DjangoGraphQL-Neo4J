@@ -1,3 +1,4 @@
+
 import graphene
 from graphene_django import DjangoObjectType
 from rest_framework.decorators import api_view, permission_classes
@@ -335,16 +336,52 @@ class UpdatePerson(graphene.Mutation):
 class UpdateMovie(graphene.Mutation):
     class Arguments:
         input = MovieInput(required=True)
+        actors=graphene.List(PersonInput)
+        directors=graphene.List(PersonInput,required=False)
+        producers=graphene.List(PersonInput,required=False)
+        writers=graphene.List(PersonInput,required=False)
     movie = graphene.Field(MovieType)
     
     @classmethod
-    def mutate(cls, root, info, input):
-        
+    def mutate(cls, root, info, input,actors,directors,producers,writers):
+        print(info.context.headers)
+        user = info.context.user
+        print(user)
+        if not user.is_authenticated:
+            raise Exception("Authentication credentials were not provided")
         movie = Movie.nodes.get(title=input.title)
+        print (input)
+        print(actors)
         movie.title = input.title
         movie.released = input.released
         movie.tagline=input.tagline
         movie.save()
+        for actor in actors:
+            try:
+                person=Person.nodes.get(name=actor.name)
+                person.acted.connect(movie)
+            except:
+                raise Exception("Please create person with Actor name first")
+        for actor in producers:
+            try:
+                person=Person.nodes.get(name=actor.name)
+                person.produced.connect(movie)
+            except:
+                raise Exception("Please create person with Producer name first")
+        for actor in writers:
+            try:
+                person=Person.nodes.get(name=actor.name)
+                person.wrote.connect(movie)
+            except:
+                raise Exception("Please create person with Writer name first")
+        for actor in directors:
+            try:
+                person=Person.nodes.get(name=actor.name)
+                person.directed.connect(movie)
+            except:
+                raise Exception("Please create person with Director name first")
+
+        print(movie)
         return UpdateMovie(movie=movie)
 
 class Mutation(graphene.ObjectType):
